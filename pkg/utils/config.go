@@ -1,9 +1,11 @@
 package utils
 
 import (
+	"bytes"
 	"log"
 	"os"
 
+	"github.com/Valentin-Foucher/doctor-meme/configs"
 	"gopkg.in/yaml.v2"
 )
 
@@ -31,14 +33,8 @@ func processError(err error) {
 }
 
 func ReadConfiguration(cfg *Configuration) {
-	f, err := os.Open(configurationFilePath)
-	if err != nil {
-		processError(err)
-	}
-	defer f.Close()
-
-	decoder := yaml.NewDecoder(f)
-	err = decoder.Decode(cfg)
+	decoder := yaml.NewDecoder(bytes.NewReader(configs.Config))
+	err := decoder.Decode(cfg)
 	if err != nil {
 		processError(err)
 	}
