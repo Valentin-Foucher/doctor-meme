@@ -1,5 +1,11 @@
-playlists:
+youtube:
+  playlists:
   - PL1wNGMba9T63zX4ZtN4R7sxPdH7MQeob-
   - PLrV16pC7dwvzQn5z-aIbZj9Gtj3njScyq
   - PLYw-090EcEJAbLLfaBWq7LCk18MkPmG-U
   - PLe7jWQJYPd7UoQFLLJHrgzhfgwrYiYitj
+
+http_client:
+  max_retries: 3
+  youtube:
+    base_url: https://youtube.googleapis.com/youtube/v3

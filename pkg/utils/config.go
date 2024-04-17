@@ -7,8 +7,22 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+type HttpClientConfig struct {
+	BaseUrl string `yaml:"base_url"`
+}
+
+type HttpConfig struct {
+	MaxRetries int              `yaml:"max_retries"`
+	Youtube    HttpClientConfig `yaml:"youtube"`
+}
+
+type YoutubeConfig struct {
+	PlaylistIDs []string `yaml:"playlists"`
+}
+
 type Configuration struct {
-	Playlists []string `yaml:"playlists"`
+	YoutubeConfig YoutubeConfig `yaml:"youtube"`
+	HttpConfig    HttpConfig    `yaml:"http_client"`
 }
 
 func processError(err error) {
