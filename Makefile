@@ -1,3 +1,6 @@
+clean:
+	rm bin/doctor-meme
+
 run: bin/doctor-meme
 	./bin/doctor-meme
 
@@ -6,6 +9,3 @@ save: bin/doctor-meme
 
 bin/doctor-meme:
 	go build -o bin/doctor-meme pkg/app/*
-
-clean:
-	rm bin/doctor-meme
