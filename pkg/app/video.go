@@ -1,8 +1,6 @@
 package main
 
 import (
-	"time"
-
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
 )
@@ -22,6 +20,7 @@ func playVideo(videoUrl string) error {
 	page.MustEval("() => document.getElementById(\"movie_player\").click()")
 	page.MustWaitStable()
 
-	time.Sleep(60 * time.Second)
+	page.MustElement(".ended-mode").WaitLoad()
+
 	return nil
 }
