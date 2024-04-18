@@ -5,7 +5,6 @@ import (
 	"math/rand/v2"
 	"net/http"
 	"os"
-	"sync"
 
 	"github.com/Valentin-Foucher/doctor-meme/pkg/utils"
 	"github.com/tidwall/gjson"
@@ -59,9 +58,10 @@ func (youtubeClient *HttpYoutubeClient) CountItemsInPlaylists() (map[string]int6
 func (youtubeClient *HttpYoutubeClient) GetRandomVideoUrl(playlistItemCounts map[string]int64) (*string, error) {
 	totalVideos := utils.Sum(utils.MapValues(playlistItemCounts))
 	videoIDs := make([]string, 0)
-	var mutex sync.Mutex
-	var wg sync.WaitGroup
-	wg.Add(len(playlistItemCounts))
+	videoIDsCh := make(chan (string))
+	stopCh := make(chan (bool))
+
+	remainingGoroutines := len(playlistItemCounts)
 
 	for _, playlistId := range utils.MapKeys(playlistItemCounts) {
 		go func(id string) error {
@@ -69,7 +69,6 @@ func (youtubeClient *HttpYoutubeClient) GetRandomVideoUrl(playlistItemCounts map
 			queryParameters := make(map[string][]string)
 			queryParameters["part"] = []string{"contentDetails"}
 			queryParameters["maxResults"] = []string{"50"}
-			defer wg.Done()
 
 			for {
 				queryParameters["pageToken"] = []string{nextPageToken}
@@ -85,14 +84,13 @@ func (youtubeClient *HttpYoutubeClient) GetRandomVideoUrl(playlistItemCounts map
 					return err
 				}
 				for _, videoIdResult := range gjson.Get(string(body), "items.#.contentDetails.videoId").Array() {
-					mutex.Lock()
-					videoIDs = append(videoIDs, videoIdResult.String())
-					mutex.Unlock()
+					videoIDsCh <- videoIdResult.String()
 				}
 				response.Body.Close()
 
 				nextPageToken = gjson.Get(string(body), "nextPageToken").String()
 				if nextPageToken == "" {
+					stopCh <- true
 					break
 				}
 			}
@@ -100,7 +98,18 @@ func (youtubeClient *HttpYoutubeClient) GetRandomVideoUrl(playlistItemCounts map
 
 		}(playlistId)
 	}
-	wg.Wait()
+
+	for {
+		select {
+		case <-stopCh:
+			remainingGoroutines--
+		case videoId := <-videoIDsCh:
+			videoIDs = append(videoIDs, videoId)
+		}
+		if remainingGoroutines == 0 {
+			break
+		}
+	}
 
 	result := new(string)
 	*result = utils.BuildYoutubeUrl(videoIDs[rand.IntN(int(totalVideos))])
